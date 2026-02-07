@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gura Finance Lab — Personal Finance System</title>
+  <meta name="description" content="A student project demo showcasing a personal finance system with LINE OA, Google Sheets automation, and AI integration.">
+  <style>
+    /* === CSS Reset & Base === */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0b1220;
+      --bg-secondary: #111827;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --bg-card-hover: rgba(255, 255, 255, 0.06);
+      --bg-glass: rgba(255, 255, 255, 0.05);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.12);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-cyan: #22d3ee;
+      --accent-cyan-glow: rgba(34, 211, 238, 0.2);
+      --accent-emerald: #34d399;
+      --accent-violet: #a78bfa;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --gradient-hero: linear-gradient(135deg, #22d3ee 0%, #a78bfa 50%, #34d399 100%);
+      --shadow-card: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 40px -10px rgba(34, 211, 238, 0.3);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.25s ease;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* === Typography === */
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
+    h3 { font-size: 1.25rem; }
+
+    p { color: var(--text-secondary); }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* === Layout === */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      padding: 5rem 0;
+    }
+
+    /* === Navbar === */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 18, 32, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 0;
+    }
+
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .navbar-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .navbar-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      list-style: none;
+    }
+
+    .navbar-menu a {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .navbar-menu a:hover {
+      color: var(--text-primary);
+      background: var(--bg-glass);
+    }
+
+    .navbar-cta {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--bg-primary);
+      background: var(--accent-cyan);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .navbar-cta:hover {
+      background: #67e8f9;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .navbar-menu { display: none; }
+      .navbar-cta { display: none; }
+      .mobile-toggle { display: block; }
+      
+      .navbar-menu.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+    }
+
+    /* === Hero Section === */
+    .hero {
+      padding: 6rem 0 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, var(--accent-cyan-glow) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 span {
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .hero-badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+    }
+
+    .badge svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      border: none;
+    }
+
+    .btn-primary {
+      color: var(--bg-primary);
+      background: var(--accent-cyan);
+    }
+
+    .btn-primary:hover {
+      background: #67e8f9;
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      color: var(--text-primary);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-light);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--text-muted);
+    }
+
+    /* === Section Header === */
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-label {
+      display: inline-block;
+      padding: 0.375rem 0.875rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-cyan);
+      background: var(--accent-cyan-glow);
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      max-width: 600px;
+      margin: 1rem auto 0;
+    }
+
+    /* === Features Grid === */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      transition: all var(--transition-base);
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-light);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-glass);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+    }
+
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--accent-cyan);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .feature-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      margin-top: 0.5rem;
+      background: var(--accent-emerald);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* === Demo Section === */
+    #demo {
+      background: var(--bg-secondary);
+    }
+
+    .demo-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .demo-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .demo-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .demo-form h3 {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-sm {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .demo-stats {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-glass);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .stat-value.income { color: var(--accent-emerald); }
+    .stat-value.expense { color: var(--accent-rose); }
+    .stat-value.balance { color: var(--accent-cyan); }
+    .stat-value.score { color: var(--accent-amber); }
+
+    .health-bar {
+      margin-top: 1rem;
+    }
+
+    .health-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-bar-track {
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .health-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width var(--transition-base);
+    }
+
+    .demo-table-wrapper {
+      margin-top: 2rem;
+      overflow-x: auto;
+    }
+
+    .demo-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .demo-table th,
+    .demo-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .demo-table th {
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .demo-table tbody tr:hover {
+      background: var(--bg-glass);
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 999px;
+    }
+
+    .type-income {
+      color: var(--accent-emerald);
+      background: rgba(52, 211, 153, 0.15);
+    }
+
+    .type-expense {
+      color: var(--accent-rose);
+      background: rgba(251, 113, 133, 0.15);
+    }
+
+    .demo-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-danger {
+      color: var(--accent-rose);
+      background: rgba(251, 113, 133, 0.1);
+      border: 1px solid rgba(251, 113, 133, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(251, 113, 133, 0.2);
+    }
+
+    /* === Architecture Section === */
+    .architecture-flow {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .arch-step {
+      flex: 1;
+      min-width: 160px;
+      max-width: 200px;
+      text-align: center;
+    }
+
+    .arch-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      margin-bottom: 0.75rem;
+      transition: all var(--transition-base);
+    }
+
+    .arch-box:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px -5px var(--accent-cyan-glow);
+    }
+
+    .arch-box svg {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 0.5rem;
+      stroke: var(--accent-cyan);
+    }
+
+    .arch-box h4 {
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .arch-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      padding-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .arch-arrow {
+        transform: rotate(90deg);
+        padding: 0.5rem 0;
+      }
+    }
+
+    .why-list {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .why-list h3 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .why-list ul {
+      list-style: none;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .why-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+    }
+
+    .why-list li svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--accent-emerald);
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    /* === FAQ Section === */
+    #faq {
+      background: var(--bg-secondary);
+    }
+
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .faq-item summary {
+      padding: 1.25rem 1.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      list-style: none;
+      transition: all var(--transition-fast);
+    }
+
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-item summary::after {
+      content: '+';
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      transition: transform var(--transition-fast);
+    }
+
+    .faq-item[open] summary::after {
+      transform: rotate(45deg);
+    }
+
+    .faq-item summary:hover {
+      background: var(--bg-glass);
+    }
+
+    .faq-answer {
+      padding: 0 1.5rem 1.25rem;
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+    }
+
+    /* === Footer === */
+    .footer {
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-subtle);
+      padding: 3rem 0 2rem;
+      text-align: center;
+    }
+
+    .footer-disclaimer {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      transition: color var(--transition-fast);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .footer-links svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .footer-copy {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* === Utilities === */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="#" class="navbar-logo">Gura Finance Lab</a>
+      <nav>
+        <ul class="navbar-menu" id="navMenu">
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <a href="#demo" class="navbar-cta">Get Started</a>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero" id="overview">
+      <div class="container hero-content">
+        <h1>Smarter personal finance with<br><span>LINE OA + Automation + AI</span></h1>
+        <p class="hero-subtitle">A student portfolio project demonstrating an end-to-end personal finance tracking system with chat-based logging, automated summaries, and AI-powered analysis.</p>
+        
+        <div class="hero-badges">
+          <span class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Instant logging
+          </span>
+          <span class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Auto summary
+          </span>
+          <span class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            Smart analysis
+          </span>
+        </div>
+
+        <div class="hero-buttons">
+          <a href="#demo" class="btn btn-primary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            View Demo
+          </a>
+          <a href="#architecture" class="btn btn-secondary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            View Architecture
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+      <div class="container">
+        <header class="section-header">
+          <span class="section-label">Core Features</span>
+          <h2>Everything you need for smarter finances</h2>
+          <p>A complete toolkit for tracking, analyzing, and understanding your personal finances through LINE chat.</p>
+        </header>
+
+        <div class="features-grid">
+          <!-- Feature 1: Logging -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </div>
+            <h3>Income & Expense Logging</h3>
+            <ul class="feature-list">
+              <li>Quick text input: "ข้าว 50" instantly logs expense</li>
+              <li>Voice message support via speech-to-text</li>
+              <li>Photo receipt scanning with OCR extraction</li>
+            </ul>
+          </article>
+
+          <!-- Feature 2: Summaries -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <h3>Daily & Monthly Summaries</h3>
+            <ul class="feature-list">
+              <li>Automated daily report at 9 PM each night</li>
+              <li>Monthly overview with trend comparison</li>
+              <li>Visual Flex Messages with charts and icons</li>
+            </ul>
+          </article>
+
+          <!-- Feature 3: Analysis -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </div>
+            <h3>Category & Trend Analysis</h3>
+            <ul class="feature-list">
+              <li>AI-powered automatic categorization</li>
+              <li>Spending pattern identification</li>
+              <li>Week-over-week and month-over-month trends</li>
+            </ul>
+          </article>
+
+          <!-- Feature 4: Budgets -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <h3>Budget & Category Limits</h3>
+            <ul class="feature-list">
+              <li>Set monthly and category-specific budgets</li>
+              <li>Proactive alerts at 80% and 100% thresholds</li>
+              <li>Carryover and adjustment suggestions</li>
+            </ul>
+          </article>
+
+          <!-- Feature 5: Health Score -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <h3>Financial Health Score</h3>
+            <ul class="feature-list">
+              <li>Composite score from savings rate, consistency, and goals</li>
+              <li>Gamified progress tracking and achievements</li>
+              <li>Personalized improvement recommendations</li>
+            </ul>
+          </article>
+
+          <!-- Feature 6: Chat Modes -->
+          <article class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+            </div>
+            <h3>Separate Chat & Logging Modes</h3>
+            <ul class="feature-list">
+              <li>Dedicated logging mode for quick entry</li>
+              <li>Chat assistant mode for questions and advice</li>
+              <li>Prevents accidental logs when chatting</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo">
+      <div class="container">
+        <header class="section-header">
+          <span class="section-label">Interactive Demo</span>
+          <h2>Try it yourself</h2>
+          <p>Add income and expenses to see live summaries and your financial health score. Data is saved locally in your browser.</p>
+        </header>
+
+        <div class="demo-container">
+          <!-- Form -->
+          <div class="demo-form">
+            <h3>Add Record</h3>
+            <form id="demoForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="recordType">Type</label>
+                  <select id="recordType" required>
+                    <option value="income">Income</option>
+                    <option value="expense" selected>Expense</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="recordAmount">Amount (฿)</label>
+                  <input type="number" id="recordAmount" min="0" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label for="recordCategory">Category</label>
+                  <select id="recordCategory" required>
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="salary">Salary</option>
+                    <option value="freelance">Freelance</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="recordDate">Date</label>
+                  <input type="date" id="recordDate" required>
+                </div>
+                <div class="form-group full-width">
+                  <label for="recordNote">Note (optional)</label>
+                  <input type="text" id="recordNote" placeholder="e.g., Lunch at MK">
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-sm">Add Record</button>
+              </div>
+            </form>
+
+            <div class="demo-controls">
+              <button id="generateData" class="btn btn-secondary btn-sm">Generate Sample Data</button>
+              <button id="clearData" class="btn btn-danger btn-sm">Clear All Data</button>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="demo-stats">
+            <h3>Summary</h3>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Income</div>
+                <div class="stat-value income" id="totalIncome">฿0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total Expense</div>
+                <div class="stat-value expense" id="totalExpense">฿0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Balance</div>
+                <div class="stat-value balance" id="balance">฿0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Health Score</div>
+                <div class="stat-value score" id="healthScore">0</div>
+              </div>
+            </div>
+            <div class="health-bar">
+              <div class="health-bar-label">
+                <span>Financial Health</span>
+                <span id="healthPercent">0%</span>
+              </div>
+              <div class="health-bar-track">
+                <div class="health-bar-fill" id="healthFill" style="width: 0%; background: var(--accent-rose);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="demo-table-wrapper">
+          <table class="demo-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTable">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No records yet. Add your first transaction above!</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture">
+      <div class="container">
+        <header class="section-header">
+          <span class="section-label">System Design</span>
+          <h2>Architecture Overview</h2>
+          <p>A serverless, no-code/low-code architecture leveraging LINE, Make, Google Sheets, and AI services.</p>
+        </header>
+
+        <div class="architecture-flow">
+          <div class="arch-step">
+            <div class="arch-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+              </svg>
+              <h4>LINE OA</h4>
+            </div>
+            <p class="arch-desc">User sends message (text/voice/photo)</p>
+          </div>
+
+          <span class="arch-arrow">→</span>
+
+          <div class="arch-step">
+            <div class="arch-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+              <h4>Webhook / Make</h4>
+            </div>
+            <p class="arch-desc">Receives & routes to processing flow</p>
+          </div>
+
+          <span class="arch-arrow">→</span>
+
+          <div class="arch-step">
+            <div class="arch-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+              <h4>Google Sheets DB</h4>
+            </div>
+            <p class="arch-desc">Stores all transactions & user data</p>
+          </div>
+
+          <span class="arch-arrow">→</span>
+
+          <div class="arch-step">
+            <div class="arch-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm0 5v5l3 3"/>
+              </svg>
+              <h4>AI Categorizer</h4>
+            </div>
+            <p class="arch-desc">Classifies transactions via GPT/Gemini</p>
+          </div>
+
+          <span class="arch-arrow">→</span>
+
+          <div class="arch-step">
+            <div class="arch-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <h4>Reply (Flex Msg)</h4>
+            </div>
+            <p class="arch-desc">Sends formatted response to user</p>
+          </div>
+        </div>
+
+        <div class="why-list">
+          <h3>Why this architecture?</h3>
+          <ul>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Zero server costs</strong> — Google Sheets + Make free tier handles typical personal usage easily</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Familiar interface</strong> — Users interact via LINE, no new app to install</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Easy debugging</strong> — All data visible in spreadsheet; Make shows execution logs</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Extensible</strong> — Can add new automations, integrations, or migrate to a real DB later</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq">
+      <div class="container">
+        <header class="section-header">
+          <span class="section-label">FAQ</span>
+          <h2>Frequently Asked Questions</h2>
+        </header>
+
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Is my financial data secure?</summary>
+            <div class="faq-answer">
+              <p>This demo stores data only in your browser's localStorage. The actual LINE OA system uses Google Sheets with restricted access (only the owner can view). No data is shared with third parties. For production, consider encrypting sensitive fields and implementing proper access controls.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>How does the system handle multiple users?</summary>
+            <div class="faq-answer">
+              <p>Each LINE user has a unique LineUserId. The system stores and filters all records by this ID, ensuring users only see their own data. The Google Sheet has one row per transaction with the user ID as a column, enabling multi-tenant data storage.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>What are the API costs for AI categorization?</summary>
+            <div class="faq-answer">
+              <p>Using GPT-4o-mini or Gemini Flash, typical costs are under $0.01 per 100 transactions. For a personal finance app with ~50 transactions/month, expect less than $0.10/month. The free tier of most AI APIs covers this comfortably.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>Why separate chat mode from logging mode?</summary>
+            <div class="faq-answer">
+              <p>Without mode separation, every message would be parsed as a potential transaction, leading to false positives (e.g., "I ate 50 baht worth of food" might log incorrectly). Dedicated modes let users switch context: logging mode expects structured input, chat mode enables free conversation with the AI assistant.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>How is data backed up?</summary>
+            <div class="faq-answer">
+              <p>Google Sheets provides automatic version history and can sync to Google Drive. For additional safety, the Make automation can be extended to create weekly backups to a separate Sheet or export to CSV. The LINE OA side has no persistent state—all data lives in the Sheet.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>What future features are planned?</summary>
+            <div class="faq-answer">
+              <p>Potential enhancements include: bill reminders, recurring transaction detection, investment tracking, multi-currency support, PDF export of monthly reports, and integration with bank APIs (where available). The modular architecture makes adding features straightforward.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <p class="footer-disclaimer">
+        This is a student project created for educational and portfolio purposes.<br>
+        It is not intended as financial advice. Please consult a professional for real financial decisions.
+      </p>
+
+      <div class="footer-links">
+        <a href="mailto:example@email.com">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email
+        </a>
+        <a href="https://github.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+          GitHub
+        </a>
+        <a href="https://line.me" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          LINE
+        </a>
+      </div>
+
+      <p class="footer-copy">© 2025 Gura Finance Lab. Built with ❤️ as a learning project.</p>
+    </div>
+  </footer>
+
+  <script>
+    // === Mobile Menu Toggle ===
+    const mobileToggle = document.getElementById('mobileToggle');
+    const navMenu = document.getElementById('navMenu');
+
+    mobileToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+    });
+
+    // Close menu when clicking a link
+    navMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('open');
+      });
+    });
+
+    // === Demo Functionality ===
+    const STORAGE_KEY = 'guraFinanceRecords';
+
+    // Initialize date field to today
+    document.getElementById('recordDate').valueAsDate = new Date();
+
+    // Load records from localStorage
+    function loadRecords() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
+    }
+
+    // Save records to localStorage
+    function saveRecords(records) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+      return '฿' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    // Calculate and update stats
+    function updateStats() {
+      const records = loadRecords();
+      
+      const totalIncome = records
+        .filter(r => r.type === 'income')
+        .reduce((sum, r) => sum + r.amount, 0);
+      
+      const totalExpense = records
+        .filter(r => r.type === 'expense')
+        .reduce((sum, r) => sum + r.amount, 0);
+      
+      const balance = totalIncome - totalExpense;
+      
+      // Simple health score: savings rate (capped at 100)
+      let healthScore = 0;
+      if (totalIncome > 0) {
+        const savingsRate = (balance / totalIncome) * 100;
+        healthScore = Math.max(0, Math.min(100, Math.round(savingsRate)));
+      }
+      
+      // Update DOM
+      document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+      document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
+      document.getElementById('balance').textContent = formatCurrency(balance);
+      document.getElementById('healthScore').textContent = healthScore;
+      document.getElementById('healthPercent').textContent = healthScore + '%';
+      
+      // Update health bar
+      const healthFill = document.getElementById('healthFill');
+      healthFill.style.width = healthScore + '%';
+      
+      // Color based on score
+      if (healthScore >= 50) {
+        healthFill.style.background = 'var(--accent-emerald)';
+      } else if (healthScore >= 25) {
+        healthFill.style.background = 'var(--accent-amber)';
+      } else {
+        healthFill.style.background = 'var(--accent-rose)';
+      }
+    }
+
+    // Render records table
+    function renderTable() {
+      const records = loadRecords();
+      const tbody = document.getElementById('recordsTable');
+      
+      if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No records yet. Add your first transaction above!</td></tr>';
+        return;
+      }
+      
+      // Sort by date descending
+      const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      tbody.innerHTML = sorted.map(record => `
+        <tr>
+          <td>${record.date}</td>
+          <td><span class="type-badge type-${record.type}">${record.type}</span></td>
+          <td style="text-transform: capitalize;">${record.category}</td>
+          <td>${formatCurrency(record.amount)}</td>
+          <td style="color: var(--text-muted);">${record.note || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Handle form submission
+    document.getElementById('demoForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const record = {
+        id: Date.now(),
+        type: document.getElementById('recordType').value,
+        amount: parseFloat(document.getElementById('recordAmount').value),
+        category: document.getElementById('recordCategory').value,
+        date: document.getElementById('recordDate').value,
+        note: document.getElementById('recordNote').value.trim()
+      };
+      
+      const records = loadRecords();
+      records.push(record);
+      saveRecords(records);
+      
+      // Reset form
+      document.getElementById('recordAmount').value = '';
+      document.getElementById('recordNote').value = '';
+      
+      updateStats();
+      renderTable();
+    });
+
+    // Generate sample data
+    document.getElementById('generateData').addEventListener('click', () => {
+      const categories = ['food', 'transport', 'shopping', 'utilities', 'entertainment'];
+      const incomeCategories = ['salary', 'freelance'];
+      const notes = [
+        'Lunch at MK', 'BTS fare', 'Coffee', 'Grab ride', 'Netflix', 
+        'Groceries', 'Electricity bill', 'Movie tickets', 'Online shopping', ''
+      ];
+      
+      const sampleRecords = [];
+      const today = new Date();
+      
+      // Add salary
+      sampleRecords.push({
+        id: Date.now(),
+        type: 'income',
+        amount: 25000,
+        category: 'salary',
+        date: new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0],
+        note: 'Monthly salary'
+      });
+      
+      // Add random expenses
+      for (let i = 0; i < 15; i++) {
+        const daysAgo = Math.floor(Math.random() * 30);
+        const date = new Date(today);
+        date.setDate(date.getDate() - daysAgo);
+        
+        sampleRecords.push({
+          id: Date.now() + i + 1,
+          type: 'expense',
+          amount: Math.round((Math.random() * 500 + 20) * 100) / 100,
+          category: categories[Math.floor(Math.random() * categories.length)],
+          date: date.toISOString().split('T')[0],
+          note: notes[Math.floor(Math.random() * notes.length)]
+        });
+      }
+      
+      saveRecords(sampleRecords);
+      updateStats();
+      renderTable();
+    });
+
+    // Clear all data
+    document.getElementById('clearData').addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all demo data?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        updateStats();
+        renderTable();
+      }
+    });
+
+    // Initialize on page load
+    updateStats();
+    renderTable();
+  </script>
+</body>
+</html>
